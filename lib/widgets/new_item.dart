@@ -13,17 +13,22 @@ class NewItem extends StatefulWidget {
 }
 
 class _NewItemState extends State<NewItem> {
- var  _enterName = '';
- var _enterQuentity = 1;
- var _selectedCategory = categories[Categories.vegetables]!;
+  var _enterName = '';
+  var _enterQuentity = 1;
+  var _selectedCategory = categories[Categories.vegetables]!;
   final _formKey = GlobalKey<FormState>();
 
-  void _saveItem(){
-    if(_formKey.currentState!.validate()){
+  void _saveItem() {
+    if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-     Navigator.of(context).pop(GroceryItem(id: DateTime.now().toString(), name: _enterName, quantity: _enterQuentity, category: _selectedCategory));
+      Navigator.of(context).pop(GroceryItem(
+          id: DateTime.now().toString(),
+          name: _enterName,
+          quantity: _enterQuentity,
+          category: _selectedCategory));
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -50,7 +55,7 @@ class _NewItemState extends State<NewItem> {
                       }
                       return null;
                     },
-                    onSaved: (value){
+                    onSaved: (value) {
                       _enterName = value!;
                     },
                   ),
@@ -73,7 +78,7 @@ class _NewItemState extends State<NewItem> {
                             ;
                             return null;
                           },
-                          onSaved: (value){
+                          onSaved: (value) {
                             _enterQuentity = int.parse(value!);
                           },
                         ),
@@ -83,28 +88,28 @@ class _NewItemState extends State<NewItem> {
                         child: DropdownButtonFormField(
                             value: _selectedCategory,
                             items: [
-                          for (final categorynew in categories.entries)
-                            DropdownMenuItem(
-                                value: categorynew.value,
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      height: 16,
-                                      width: 16,
-                                      color: categorynew.value.color,
-                                    ),
-                                    SizedBox(
-                                      width: 8,
-                                    ),
-                                    Text(categorynew.value.title)
-                                  ],
-                                ))
-                        ], onChanged: (value) {
+                              for (final categorynew in categories.entries)
+                                DropdownMenuItem(
+                                    value: categorynew.value,
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          height: 16,
+                                          width: 16,
+                                          color: categorynew.value.color,
+                                        ),
+                                        SizedBox(
+                                          width: 8,
+                                        ),
+                                        Text(categorynew.value.title)
+                                      ],
+                                    ))
+                            ],
+                            onChanged: (value) {
                               setState(() {
                                 _selectedCategory = value!;
-
                               });
-                        }),
+                            }),
                       )
                     ],
                   ),
@@ -114,9 +119,11 @@ class _NewItemState extends State<NewItem> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      TextButton(onPressed:(){
-                        _formKey.currentState!.reset();
-                      }, child: Text('Reset')),
+                      TextButton(
+                          onPressed: () {
+                            _formKey.currentState!.reset();
+                          },
+                          child: Text('Reset')),
                       ElevatedButton(
                           onPressed: _saveItem, child: Text('Add items'))
                     ],
