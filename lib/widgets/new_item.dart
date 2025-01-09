@@ -1,9 +1,12 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:shopinglist/data/dummy_items.dart';
+import 'package:shopinglist/models/grocery_item.dart';
+import 'package:shopinglist/widgets/grocery_list.dart';
 import 'package:flutter/material.dart';
 import 'package:shopinglist/data/categories.dart';
-import 'package:shopinglist/data/dummy_items.dart';
 import 'package:shopinglist/models/category.dart';
-import 'package:shopinglist/models/grocery_item.dart';
+import 'package:http/http.dart' as http;
 
 class NewItem extends StatefulWidget {
   const NewItem({super.key});
@@ -18,14 +21,32 @@ class _NewItemState extends State<NewItem> {
   var _selectedCategory = categories[Categories.vegetables]!;
   final _formKey = GlobalKey<FormState>();
 
-  void _saveItem() {
+  void _saveItem()async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-      Navigator.of(context).pop(GroceryItem(
-          id: DateTime.now().toString(),
-          name: _enterName,
-          quantity: _enterQuentity,
-          category: _selectedCategory));
+      // https are package and first quate string dbproject id & second quate string must be collection(table)
+      final url = Uri.https('shopping-list-bcf2e-default-rtdb.firebaseio.com',
+          'dbshoppinglist.json');
+      //which methos must be use they pass
+    final response = await http.post(url,
+          headers: {
+            'Content-Type':
+                'application/json' //header are passd map type key : value pair data
+          },
+          body: json.encode({
+            'name': _enterName,
+            'quantity': _enterQuentity,
+            'category': _selectedCategory.title
+          })).then((response){
+            print(response.body);
+            print(response.statusCode);
+
+            if(!context.mounted){
+              return;// mounted is bollean property thet are chek the widget tree any state object are present or not
+            }
+
+             Navigator.of(context).pop();
+    });
     }
   }
 
