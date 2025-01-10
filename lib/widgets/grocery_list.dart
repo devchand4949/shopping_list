@@ -17,7 +17,7 @@ class GroceryList extends StatefulWidget {
 }
 
 class _GroceryListState extends State<GroceryList> {
-   List<GroceryItem> _groceryItems = [];
+  List<GroceryItem> _groceryItems = [];
 
   @override
   void initState() {
@@ -29,30 +29,40 @@ class _GroceryListState extends State<GroceryList> {
     final url = Uri.https('shopping-list-bcf2e-default-rtdb.firebaseio.com',
         'dbshoppinglist.json');
     final response = await http.get(url);
-    final Map<String, dynamic> listData =
-        json.decode(response.body);
-    final List<GroceryItem> _loadedItem = [];
+    final Map<String, dynamic> listData = json.decode(response.body);
+
+    final List<GroceryItem> loadedItem = [];//
+
     for (final item in listData.entries) {
       final category = categories.entries
           .firstWhere(
               (catItem) => catItem.value.title == item.value['category'])
           .value;
-      _loadedItem.add(GroceryItem(
+
+      loadedItem.add(GroceryItem(
           id: item.key,
           name: item.value['name'],
           quantity: item.value['quantity'],
           category: category));
     }
-      setState(() {
-        _groceryItems = _loadedItem;
-      });
+
+    setState(() {
+      _groceryItems == loadedItem ;
+    });
   }
 
   void _addItem() async {
-    await Navigator.of(context).push<GroceryItem>(
+    final newItem = await Navigator.of(context).push<GroceryItem>(
         MaterialPageRoute(builder: (context) => const NewItem()));
 
-    _loadItem(); //fetch data from database ,define ubove method
+    if(newItem == null){
+      return;
+    }
+    setState(() {
+      _groceryItems.add(newItem);
+    });
+
+    // _loadItem(); //fetch data from database ,define ubove method
   }
 
   @override

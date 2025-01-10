@@ -21,32 +21,34 @@ class _NewItemState extends State<NewItem> {
   var _selectedCategory = categories[Categories.vegetables]!;
   final _formKey = GlobalKey<FormState>();
 
-  void _saveItem()async {
+  void _saveItem() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
       // https are package and first quate string dbproject id & second quate string must be collection(table)
       final url = Uri.https('shopping-list-bcf2e-default-rtdb.firebaseio.com',
           'dbshoppinglist.json');
       //which methos must be use they pass
-    final response = await http.post(url,
-          headers: {
-            'Content-Type':
-                'application/json' //header are passd map type key : value pair data
-          },
-          body: json.encode({
-            'name': _enterName,
-            'quantity': _enterQuentity,
-            'category': _selectedCategory.title
-          })).then((response){
-            print(response.body);
-            print(response.statusCode);
+      final response = await http
+          .post(url,
+              headers: {
+                'Content-Type':
+                    'application/json' //header are passd map type key : value pair data
+              },
+              body: json.encode({
+                'name': _enterName,
+                'quantity': _enterQuentity,
+                'category': _selectedCategory.title
+              }))
+          .then((response) {
 
-            if(!context.mounted){
-              return;// mounted is bollean property thet are chek the widget tree any state object are present or not
-            }
+            final resData = json.decode(response.body);
 
-             Navigator.of(context).pop();
-    });
+        if (!context.mounted) {
+          return; // mounted is bollean property thet are chek the widget tree any state object are present or not
+        }
+
+        Navigator.of(context).pop(GroceryItem(id: resData['name'], name: _enterName, quantity: _enterQuentity, category: _selectedCategory));
+      });
     }
   }
 
