@@ -21,9 +21,16 @@ class _NewItemState extends State<NewItem> {
   var _selectedCategory = categories[Categories.vegetables]!;
   final _formKey = GlobalKey<FormState>();
 
+  var _isSending = false;
+
   void _saveItem() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
+
+      setState(() {
+        _isSending = true;
+      });
+
       // https are package and first quate string dbproject id & second quate string must be collection(table)
       final url = Uri.https('shopping-list-bcf2e-default-rtdb.firebaseio.com',
           'dbshoppinglist.json');
@@ -40,14 +47,17 @@ class _NewItemState extends State<NewItem> {
                 'category': _selectedCategory.title
               }))
           .then((response) {
-
-            final resData = json.decode(response.body);
+        final resData = json.decode(response.body);
 
         if (!context.mounted) {
           return; // mounted is bollean property thet are chek the widget tree any state object are present or not
         }
 
-        Navigator.of(context).pop(GroceryItem(id: resData['name'], name: _enterName, quantity: _enterQuentity, category: _selectedCategory));
+        Navigator.of(context).pop(GroceryItem(
+            id: resData['name'],
+            name: _enterName,
+            quantity: _enterQuentity,
+            category: _selectedCategory));
       });
     }
   }
@@ -143,12 +153,21 @@ class _NewItemState extends State<NewItem> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       TextButton(
-                          onPressed: () {
-                            _formKey.currentState!.reset();
-                          },
+                          onPressed: _isSending
+                              ? null
+                              : () {
+                                  _formKey.currentState!.reset();
+                                },
                           child: Text('Reset')),
                       ElevatedButton(
-                          onPressed: _saveItem, child: Text('Add items'))
+                          onPressed: _isSending ? null : _saveItem,
+                          child: _isSending
+                              ? const SizedBox(
+                                  height: 16,
+                                  width: 1,
+                                  child: CircularProgressIndicator(),
+                                )
+                              : const Text('Add items'))
                     ],
                   )
                 ],

@@ -18,6 +18,8 @@ class GroceryList extends StatefulWidget {
 
 class _GroceryListState extends State<GroceryList> {
   List<GroceryItem> _groceryItems = [];
+  var _isLoading = true;
+  String? _error;
 
   @override
   void initState() {
@@ -28,41 +30,74 @@ class _GroceryListState extends State<GroceryList> {
   void _loadItem() async {
     final url = Uri.https('shopping-list-bcf2e-default-rtdb.firebaseio.com',
         'dbshoppinglist.json');
-    final response = await http.get(url);
-    final Map<String, dynamic> listData = json.decode(response.body);
 
-    final List<GroceryItem> loadedItem = [];//
+    try {
+      final response = await http.get(url);
 
-    for (final item in listData.entries) {
-      final category = categories.entries
-          .firstWhere(
-              (catItem) => catItem.value.title == item.value['category'])
-          .value;
+      if (response.statusCode >= 400) {
+        setState(() {
+          // if wrong url then show
+          _error = "Fail to fetch data please try again later";
+        });
+      }
 
-      loadedItem.add(GroceryItem(
-          id: item.key,
-          name: item.value['name'],
-          quantity: item.value['quantity'],
-          category: category));
+      if (response.body == 'null') {
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
+      final Map<String, dynamic> listData = json.decode(response.body);
+
+      final List<GroceryItem> loadedItem = []; //
+
+      for (final item in listData.entries) {
+        final category = categories.entries
+            .firstWhere(
+                (catItem) => catItem.value.title == item.value['category'])
+            .value;
+
+        loadedItem.add(GroceryItem(
+            id: item.key,
+            name: item.value['name'],
+            quantity: item.value['quantity'],
+            category: category));
+      }
+
+      setState(() {
+        _groceryItems = loadedItem;
+        _isLoading = false;
+      });
+    } catch (error) {
+      setState(() {
+        _error = "Something went wrong";
+      });
     }
-
-    setState(() {
-      _groceryItems == loadedItem ;
-    });
   }
 
   void _addItem() async {
     final newItem = await Navigator.of(context).push<GroceryItem>(
         MaterialPageRoute(builder: (context) => const NewItem()));
 
-    if(newItem == null){
+    if (newItem == null) {
       return;
     }
     setState(() {
       _groceryItems.add(newItem);
     });
+  }
 
-    // _loadItem(); //fetch data from database ,define ubove method
+  void _removeItem(GroceryItem item) {
+    // final index = _groceryItems.indexOf(item);
+    final url = Uri.https('shopping-list-bcf2e-default-rtdb.firebaseio.com',
+        'dbshoppinglist/${item.id}.json');
+
+    http.delete(url);
+
+    setState(() {
+      _groceryItems.remove(item);
+    });
   }
 
   @override
@@ -71,14 +106,18 @@ class _GroceryListState extends State<GroceryList> {
       child: Text('No item added yet'),
     );
 
+    if (_isLoading) {
+      content = const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+
     if (_groceryItems.isNotEmpty) {
       content = ListView.builder(
         itemCount: _groceryItems.length,
         itemBuilder: (context, index) => Dismissible(
           onDismissed: (direction) {
-            setState(() {
-              _groceryItems.removeAt(index);
-            });
+           _removeItem(_groceryItems[index]);
           },
           key: ValueKey(_groceryItems[index].id),
           // direction: DismissDirection.endToStart,
@@ -93,6 +132,10 @@ class _GroceryListState extends State<GroceryList> {
           ),
         ),
       );
+    }
+
+    if (_error != null) {
+      content = Center(child: Text(_error!));
     }
 
     return Scaffold(
